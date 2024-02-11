@@ -19,20 +19,21 @@ export interface FailLogin {
 }
 
 export const loginPlanitou = async (username: string, password: string) => {
-  const login_endpoint = "https://planitou.ca/ext_auth/login.process.php";
+  const login_endpoint = "https://www.planitou.ca/ext_auth/login.process.php";
 
-  const headers = {
-    "accept": "*/*",
-    "accept-language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7",
+  const params = new URLSearchParams();
+  params.append('user', username);
+  params.append('pass', password);
+
+  const headers: HeadersInit = {
+    accept: "*/*",
     "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-    "sec-fetch-dest": "empty",
-    "Referer": "https://planitou.ca/ext_auth/login.php"
-  };
+  }
 
   const response = await fetch(login_endpoint, {
-    method: 'POST',
-    body: `user=${username}&pass=${password}`,
-    headers
+    headers,
+    body: params.toString(),
+    method: "POST"
   });
 
   if (!response.ok) {

@@ -1,12 +1,19 @@
 import dotenv from 'dotenv';
 import { file, search } from './planitou/api-planitou';
+import { existsSync, mkdirSync } from 'fs';
 
 import { getAPIToken, loginPlanitou } from "./planitou/auth";
 import { saveBlobToFile } from './utils/utils';
 
 dotenv.config();
 
+const createDirIfNotExists = (dir: string) =>
+  !existsSync(dir) ? mkdirSync(dir) : undefined;
+
 const main = async () => {
+  const destinationFolder = 'downloads';
+  createDirIfNotExists(destinationFolder);
+
   const username = process.env.PLANITOU_USERNAME;
   const password = process.env.PLANITOU_PASSWORD;
 
@@ -25,12 +32,15 @@ const main = async () => {
   if (!apiToken) return;
   console.log(apiToken);
 
-  const agenda = await search(apiToken, 262, "2023-11-26", "2024-01-07");
-  console.log(agenda);
+  const currentDate = new Date();
+  const fiveDaysAgo = new Date(new Date().setDate(new Date().getDate() - 5));
+
+  const agenda = await search(apiToken, 262, fiveDaysAgo.toString(), currentDate.toString());
   agenda.data.forEach((entry) => {
     entry.files.forEach(async (planitouFile) => {
       const photo = await file(apiToken, Number(planitouFile.id));
-      if (photo) saveBlobToFile(photo, `downloads/${planitouFile.filename}`);
+      const fileName = `${destinationFolder}/${planitouFile.filename}`;
+      if (photo && existsSync(fileName)) saveBlobToFile(photo, fileName);
     })
   })
 }
